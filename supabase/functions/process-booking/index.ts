@@ -15,11 +15,11 @@ interface BookingRecord {
   host_id: string;
   guest_id: string;
   friend_link_id: string;
-  start_time: string;
-  end_time: string;
   video_app: string;
-  video_url: string;
+  video_url: string | null;
   status: string;
+  slot_start_time: string;
+  slot_end_time: string;
 }
 
 serve(async (req: Request) => {
@@ -67,7 +67,7 @@ serve(async (req: Request) => {
     // 1. Validate slot exists and is not already booked
     const { data: slot, error: slotError } = await supabase
       .from("fmcu_availability_slots")
-      .select("id, user_id, start_time, end_time, is_booked, video_app")
+      .select("id, user_id, start_time, end_time, is_booked")
       .eq("id", slot_id)
       .single();
 
@@ -96,7 +96,7 @@ serve(async (req: Request) => {
     // 3. Validate friend link exists and guest has a valid invite
     const { data: friendLink, error: friendError } = await supabase
       .from("fmcu_friends")
-      .select("id, user_id, friend_name, guest_user_id")
+      .select("id, user_id, friend_name, friend_user_id")
       .eq("id", friend_link_id)
       .single();
 
@@ -117,7 +117,7 @@ serve(async (req: Request) => {
 
     // Verify the guest is valid for this friend link
     const validGuest =
-      guest_id === friendLink.guest_user_id ||
+      guest_id === friendLink.friend_user_id ||
       guest_id === user.id;
 
     if (!validGuest) {
@@ -131,23 +131,29 @@ serve(async (req: Request) => {
     const { data: invite } = await supabase
       .from("fmcu_invites")
       .select("id, status, expires_at")
-      .eq("friend_link_id", friend_link_id)
+      .eq("to_friend_id", friend_link_id)
       .eq("status", "accepted")
       .gte("expires_at", new Date().toISOString())
       .limit(1)
       .single();
 
     // Allow booking if invite is accepted OR if guest_user_id is already set on friend_link
-    if (!invite && !friendLink.guest_user_id) {
+    if (!invite && !friendLink.friend_user_id) {
       return new Response(
         JSON.stringify({ error: "No valid accepted invite found for this friend link" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // 4. Create booking record
+    // 4. Get host's preferred video app
+    const { data: hostProfile } = await supabase
+      .from("fmcu_profiles")
+      .select("preferred_video_app")
+      .eq("id", slot.user_id)
+      .single();
+
     const bookingId = crypto.randomUUID();
-    const videoApp = slot.video_app || "jitsi";
+    const videoApp = hostProfile?.preferred_video_app || "jitsi";
     let videoUrl: string;
 
     switch (videoApp) {
@@ -164,10 +170,6 @@ serve(async (req: Request) => {
         videoUrl = `https://meet.jit.si/5mcu-${bookingId}`;
     }
 
-    const endTime = new Date(
-      new Date(slot.start_time).getTime() + 5 * 60 * 1000,
-    ).toISOString();
-
     const { data: booking, error: bookingError } = await supabase
       .from("fmcu_bookings")
       .insert({
@@ -176,8 +178,6 @@ serve(async (req: Request) => {
         host_id: slot.user_id,
         guest_id: guest_id,
         friend_link_id: friend_link_id,
-        start_time: slot.start_time,
-        end_time: endTime,
         video_app: videoApp,
         video_url: videoUrl,
         status: "confirmed",
@@ -195,7 +195,7 @@ serve(async (req: Request) => {
     // 5. Mark slot as booked
     const { error: updateError } = await supabase
       .from("fmcu_availability_slots")
-      .update({ is_booked: true, booking_id: bookingId })
+      .update({ is_booked: true, booked_by: guest_id })
       .eq("id", slot_id);
 
     if (updateError) {
@@ -223,7 +223,7 @@ serve(async (req: Request) => {
           bookingId: booking.id,
           videoApp: booking.video_app,
           videoUrl: booking.video_url,
-          startTime: booking.start_time,
+          startTime: slot.start_time,
         },
       );
     } catch (pushErr) {
@@ -237,11 +237,11 @@ serve(async (req: Request) => {
       host_id: booking.host_id,
       guest_id: booking.guest_id,
       friend_link_id: booking.friend_link_id,
-      start_time: booking.start_time,
-      end_time: booking.end_time,
       video_app: booking.video_app,
       video_url: booking.video_url,
       status: booking.status,
+      slot_start_time: slot.start_time,
+      slot_end_time: slot.end_time,
     };
 
     return new Response(

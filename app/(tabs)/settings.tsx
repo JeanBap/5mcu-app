@@ -177,7 +177,7 @@ export default function SettingsScreen() {
       ? profile.full_name.charAt(0).toUpperCase()
       : '?';
 
-  const isPremium = profile?.subscription_status === 'premium';
+  const isPremium = profile?.is_premium === true;
 
   const renderSectionHeader = (title: string) => (
     <Text style={[styles.sectionHeader, { color: textSecondaryColor }]}>

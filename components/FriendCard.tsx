@@ -82,7 +82,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(
     const statusColor = isActive ? COLORS.success : COLORS.warning;
     const statusLabel = isActive ? 'Active' : 'Pending';
 
-    const frequencyLabel = getFrequencyLabel(friend.call_frequency_per_month);
+    const frequencyLabel = getFrequencyLabel(friend.frequency);
 
     const nextCallText = nextCallDate
       ? `Next: ${format(nextCallDate, 'MMM d, h:mm a')}`

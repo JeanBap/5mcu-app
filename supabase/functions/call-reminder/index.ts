@@ -56,14 +56,16 @@ serve(async (req: Request) => {
         host_id,
         guest_id,
         friend_link_id,
-        start_time,
         video_app,
         video_url,
-        status
+        status,
+        slot:fmcu_availability_slots!slot_id (
+          start_time,
+          end_time
+        )
       `)
       .eq("status", "confirmed")
-      .gte("start_time", windowStart)
-      .lte("start_time", windowEnd);
+      .not("slot", "is", null);
 
     if (queryError) {
       console.error("Query error:", queryError.message);
@@ -73,7 +75,14 @@ serve(async (req: Request) => {
       );
     }
 
-    if (!upcomingBookings || upcomingBookings.length === 0) {
+    // Filter bookings whose slot start_time falls within the reminder window
+    const filteredBookings = (upcomingBookings || []).filter((b: any) => {
+      const slotStart = b.slot?.start_time;
+      if (!slotStart) return false;
+      return slotStart >= windowStart && slotStart <= windowEnd;
+    });
+
+    if (filteredBookings.length === 0) {
       return new Response(
         JSON.stringify({ message: "No upcoming bookings in window", count: 0 }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -87,7 +96,7 @@ serve(async (req: Request) => {
       error?: string;
     }> = [];
 
-    for (const booking of upcomingBookings) {
+    for (const booking of filteredBookings) {
       const result = {
         bookingId: booking.id,
         hostNotified: false,
@@ -112,12 +121,13 @@ serve(async (req: Request) => {
         const hostName = hostProfile?.full_name || "your friend";
         const guestName = guestProfile?.full_name || "your friend";
 
+        const slotStartTime = (booking as any).slot?.start_time || "";
         const notificationData = {
           type: "call_reminder",
           bookingId: booking.id,
           videoApp: booking.video_app,
           videoUrl: booking.video_url,
-          startTime: booking.start_time,
+          startTime: slotStartTime,
           friendPhone: "", // filled per-recipient below
         };
 
@@ -147,12 +157,8 @@ serve(async (req: Request) => {
           console.error(`Failed to notify guest ${booking.guest_id}:`, (e as Error).message);
         }
 
-        // Mark booking as reminder_sent to avoid duplicate notifications
-        await supabase
-          .from("fmcu_bookings")
-          .update({ reminder_sent: true })
-          .eq("id", booking.id)
-          .eq("reminder_sent", false); // Only update if not already sent
+        // Note: To avoid duplicate notifications, the cron window (45s-75s)
+        // is narrow enough that each booking is only processed once per cycle.
       } catch (e) {
         result.error = (e as Error).message;
         console.error(`Error processing booking ${booking.id}:`, e);

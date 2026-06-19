@@ -22,9 +22,28 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "5MCU uses your contacts to help you find friends to schedule catch-up calls with.",
       NSUserNotificationsUsageDescription:
         "5MCU sends you reminders before your scheduled catch-up calls.",
+      LSApplicationQueriesSchemes: [
+        "whatsapp",
+        "facetime",
+        "facetime-audio",
+      ],
     },
     entitlements: {
       "com.apple.developer.applesignin": ["Default"],
+    },
+    privacyManifests: {
+      NSPrivacyAccessedAPITypes: [
+        {
+          NSPrivacyAccessedAPIType:
+            "NSPrivacyAccessedAPICategoryUserDefaults",
+          NSPrivacyAccessedAPITypeReasons: ["C56D.1"],
+        },
+        {
+          NSPrivacyAccessedAPIType:
+            "NSPrivacyAccessedAPICategoryDiskSpace",
+          NSPrivacyAccessedAPITypeReasons: ["E174.1"],
+        },
+      ],
     },
   },
   android: {
@@ -68,6 +87,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-apple-authentication",
+    [
+      "@react-native-google-signin/google-signin",
+      {
+        iosUrlScheme:
+          "com.googleusercontent.apps.YOUR_IOS_CLIENT_ID",
+      },
+    ],
     "expo-secure-store",
     "expo-font",
   ],

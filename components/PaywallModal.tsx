@@ -16,7 +16,7 @@ import {
   getPurchaseOfferings,
   purchasePremium,
   restorePurchases,
-} from '@/services/purchases';
+} from '@/lib/purchases';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

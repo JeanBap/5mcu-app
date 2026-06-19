@@ -52,20 +52,29 @@ serve(async (req: Request) => {
     const endWindowStart = new Date(now.getTime() - CALL_DURATION_MS - 15 * 1000).toISOString();
     const endWindowEnd = new Date(now.getTime() - CALL_DURATION_MS + 15 * 1000).toISOString();
 
-    const { data: endingBookings, error: queryError } = await supabase
+    // Query confirmed bookings and join slot to get start_time
+    const { data: allConfirmedBookings, error: queryError } = await supabase
       .from("fmcu_bookings")
       .select(`
         id,
         host_id,
         guest_id,
         friend_link_id,
-        start_time,
-        end_time,
-        status
+        status,
+        slot:fmcu_availability_slots!slot_id (
+          start_time,
+          end_time
+        )
       `)
       .eq("status", "confirmed")
-      .gte("start_time", endWindowStart)
-      .lte("start_time", endWindowEnd);
+      .not("slot", "is", null);
+
+    // Filter to bookings whose slot started ~5 minutes ago (within window)
+    const endingBookings = (allConfirmedBookings || []).filter((b: any) => {
+      const slotStart = b.slot?.start_time;
+      if (!slotStart) return false;
+      return slotStart >= endWindowStart && slotStart <= endWindowEnd;
+    });
 
     if (queryError) {
       console.error("Query error:", queryError.message);
@@ -102,50 +111,50 @@ serve(async (req: Request) => {
         // Check for next calls for both host and guest
         const nextCallWindowEnd = new Date(now.getTime() + NEXT_CALL_WINDOW_MS).toISOString();
 
-        // Host's next call
+        // Host's next call -- join through slot to get start_time
         const { data: hostNextBookings } = await supabase
           .from("fmcu_bookings")
-          .select("id, guest_id, start_time, friend_link_id")
+          .select("id, guest_id, friend_link_id, slot:fmcu_availability_slots!slot_id(start_time)")
           .eq("host_id", booking.host_id)
           .eq("status", "confirmed")
-          .neq("id", booking.id)
-          .gte("start_time", now.toISOString())
-          .lte("start_time", nextCallWindowEnd)
-          .order("start_time", { ascending: true })
-          .limit(1);
+          .neq("id", booking.id);
+
+        const hostNextFiltered = (hostNextBookings || [])
+          .filter((b: any) => {
+            const st = b.slot?.start_time;
+            return st && st >= now.toISOString() && st <= nextCallWindowEnd;
+          })
+          .sort((a: any, b: any) => new Date(a.slot.start_time).getTime() - new Date(b.slot.start_time).getTime());
 
         // Guest's next call (they might be host or guest in other bookings)
         const { data: guestNextAsHost } = await supabase
           .from("fmcu_bookings")
-          .select("id, guest_id, start_time, friend_link_id")
+          .select("id, guest_id, friend_link_id, slot:fmcu_availability_slots!slot_id(start_time)")
           .eq("host_id", booking.guest_id)
           .eq("status", "confirmed")
-          .neq("id", booking.id)
-          .gte("start_time", now.toISOString())
-          .lte("start_time", nextCallWindowEnd)
-          .order("start_time", { ascending: true })
-          .limit(1);
+          .neq("id", booking.id);
 
         const { data: guestNextAsGuest } = await supabase
           .from("fmcu_bookings")
-          .select("id, host_id, start_time, friend_link_id")
+          .select("id, host_id, friend_link_id, slot:fmcu_availability_slots!slot_id(start_time)")
           .eq("guest_id", booking.guest_id)
           .eq("status", "confirmed")
-          .neq("id", booking.id)
-          .gte("start_time", now.toISOString())
-          .lte("start_time", nextCallWindowEnd)
-          .order("start_time", { ascending: true })
-          .limit(1);
+          .neq("id", booking.id);
 
-        const hostNextCall = hostNextBookings?.[0] || null;
+        const hostNextCall = hostNextFiltered[0] || null;
 
         // Combine guest's next calls and pick the earliest
         const guestNextCalls = [
           ...(guestNextAsHost || []),
           ...(guestNextAsGuest || []),
-        ].sort(
-          (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
-        );
+        ]
+          .filter((b: any) => {
+            const st = b.slot?.start_time;
+            return st && st >= now.toISOString() && st <= nextCallWindowEnd;
+          })
+          .sort(
+            (a: any, b: any) => new Date(a.slot.start_time).getTime() - new Date(b.slot.start_time).getTime(),
+          );
         const guestNextCall = guestNextCalls[0] || null;
 
         // Look up names for personalized messages

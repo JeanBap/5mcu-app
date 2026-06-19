@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import * as ExpoNotifications from 'expo-notifications';
 import { COLORS } from '@/constants/config';
-import useAuth from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { initPurchases } from '@/lib/purchases';
 import {
   registerForPushNotifications,

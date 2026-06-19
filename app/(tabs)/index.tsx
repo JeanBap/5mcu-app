@@ -140,15 +140,20 @@ export default function HomeScreen() {
   const headerDate = formatHeaderDate();
 
   const handleJoinCall = useCallback((booking: Booking) => {
-    const urlOrPhone = booking.video_url || booking.friend.phone || '';
-    if (!urlOrPhone) {
+    const phone = booking.friend.phone || undefined;
+    const url = booking.video_url || undefined;
+    if (!phone && !url) {
       Alert.alert(
         'No call link',
         'There is no video link or phone number for this call.'
       );
       return;
     }
-    openVideoCall(booking.video_app, urlOrPhone);
+    openVideoCall(
+      booking.video_app as 'whatsapp' | 'facetime' | 'jitsi' | 'zoom',
+      phone,
+      url,
+    );
   }, []);
 
   const handleCancelBooking = useCallback(

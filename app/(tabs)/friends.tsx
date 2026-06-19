@@ -79,7 +79,7 @@ export default function FriendsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
 
-  const isPremium = profile?.subscription_status === 'premium';
+  const isPremium = profile?.is_premium === true;
   const friendCount = getFriendCount();
   const atFreeLimit = !isPremium && friendCount >= APP_CONFIG.maxFreeFriends;
 
@@ -122,12 +122,12 @@ export default function FriendsScreen() {
 
     setIsSubmitting(true);
     try {
-      const newFriend = await addFriend({
-        name: form.name.trim(),
-        phone: form.phone.trim() || undefined,
-        email: form.email.trim() || undefined,
-        frequency: form.frequency,
-      });
+      const newFriend = await addFriend(
+        form.name.trim(),
+        form.phone.trim() || '',
+        form.email.trim() || '',
+        form.frequency as 1 | 2 | 4,
+      );
 
       handleCloseModal();
       await fetchFriends();

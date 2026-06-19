@@ -102,7 +102,7 @@ serve(async (req: Request) => {
       const { data: existing } = await supabase
         .from("fmcu_invites")
         .select("id")
-        .eq("code", inviteCode)
+        .eq("invite_code", inviteCode)
         .single();
       if (!existing) break;
       attempts++;
@@ -130,12 +130,11 @@ serve(async (req: Request) => {
     const { data: invite, error: insertError } = await supabase
       .from("fmcu_invites")
       .insert({
-        code: inviteCode,
-        inviter_id: user.id,
-        friend_link_id: friendLink.id,
-        method: invite_method,
+        invite_code: inviteCode,
+        from_user_id: user.id,
+        to_friend_id: friendLink.id,
         status: "pending",
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
       })
       .select("id")
       .single();

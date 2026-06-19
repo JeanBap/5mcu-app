@@ -129,32 +129,36 @@ serve(async (req: Request) => {
 
     const resolvedUserId = profile?.id || userId;
 
+    // Map RevenueCat store to our fmcu_sub_provider enum
+    const mapStoreToProvider = (store: string): "apple" | "google" | "stripe" => {
+      switch (store) {
+        case "APP_STORE": return "apple";
+        case "PLAY_STORE": return "google";
+        case "STRIPE": return "stripe";
+        default: return "stripe";
+      }
+    };
+
     // Process based on event type
+    // Schema columns: user_id, tier (free/premium), provider (apple/google/stripe),
+    // provider_subscription_id, expires_at, created_at, updated_at
     switch (event.type) {
       case "INITIAL_PURCHASE": {
         // New subscription -- create or update subscription record
         await supabase.from("fmcu_subscriptions").upsert(
           {
             user_id: resolvedUserId,
-            revenuecat_id: event.original_transaction_id,
-            product_id: event.product_id,
-            store: event.store,
-            status: "active",
-            period_type: event.period_type,
-            purchased_at: new Date(event.purchased_at_ms).toISOString(),
+            tier: "premium" as const,
+            provider: mapStoreToProvider(event.store),
+            provider_subscription_id: event.original_transaction_id,
             expires_at: event.expiration_at_ms
               ? new Date(event.expiration_at_ms).toISOString()
               : null,
-            currency: event.currency,
-            price: event.price_in_purchased_currency,
-            entitlements: event.entitlement_ids,
-            environment: event.environment,
-            is_family_share: event.is_family_share,
           },
           { onConflict: "user_id" },
         );
 
-        // Set premium flag
+        // Set premium flag on profile
         await supabase
           .from("fmcu_profiles")
           .update({ is_premium: true })
@@ -169,12 +173,10 @@ serve(async (req: Request) => {
         await supabase
           .from("fmcu_subscriptions")
           .update({
-            status: "active",
+            tier: "premium" as const,
             expires_at: event.expiration_at_ms
               ? new Date(event.expiration_at_ms).toISOString()
               : null,
-            purchased_at: new Date(event.purchased_at_ms).toISOString(),
-            price: event.price_in_purchased_currency,
           })
           .eq("user_id", resolvedUserId);
 
@@ -189,16 +191,8 @@ serve(async (req: Request) => {
 
       case "CANCELLATION": {
         // Subscription cancelled but still active until expiration
-        await supabase
-          .from("fmcu_subscriptions")
-          .update({
-            status: "cancelled",
-            cancellation_reason: event.cancellation_reason || null,
-          })
-          .eq("user_id", resolvedUserId);
-
-        // User remains premium until expiration_at
-        // is_premium stays true; EXPIRATION event will flip it
+        // tier stays "premium" until EXPIRATION event fires
+        // is_premium stays true on profile until expiry
         console.log(`CANCELLATION: ${resolvedUserId} cancelled (active until expiry)`);
         break;
       }
@@ -208,7 +202,7 @@ serve(async (req: Request) => {
         await supabase
           .from("fmcu_subscriptions")
           .update({
-            status: "expired",
+            tier: "free" as const,
             expires_at: event.expiration_at_ms
               ? new Date(event.expiration_at_ms).toISOString()
               : new Date().toISOString(),
@@ -229,8 +223,7 @@ serve(async (req: Request) => {
         await supabase
           .from("fmcu_subscriptions")
           .update({
-            product_id: event.product_id,
-            status: "active",
+            tier: "premium" as const,
             expires_at: event.expiration_at_ms
               ? new Date(event.expiration_at_ms).toISOString()
               : null,
@@ -242,12 +235,8 @@ serve(async (req: Request) => {
       }
 
       case "BILLING_ISSUE": {
-        // Payment failure -- mark as billing issue but don't revoke yet
-        await supabase
-          .from("fmcu_subscriptions")
-          .update({ status: "billing_issue" })
-          .eq("user_id", resolvedUserId);
-
+        // Payment failure -- log but don't revoke yet
+        // tier stays "premium" until EXPIRATION event
         console.log(`BILLING_ISSUE: ${resolvedUserId}`);
         break;
       }
@@ -264,18 +253,6 @@ serve(async (req: Request) => {
         console.log(`Unhandled RevenueCat event type: ${event.type}`);
       }
     }
-
-    // Log the event for audit trail
-    await supabase.from("fmcu_subscription_events").insert({
-      user_id: resolvedUserId,
-      event_type: event.type,
-      event_id: event.id,
-      product_id: event.product_id,
-      store: event.store,
-      environment: event.environment,
-      raw_event: event,
-      created_at: new Date(event.event_timestamp_ms).toISOString(),
-    });
 
     return new Response(
       JSON.stringify({ message: "Webhook processed", event_type: event.type }),

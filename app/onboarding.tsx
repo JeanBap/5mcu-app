@@ -13,12 +13,12 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { COLORS } from '@/constants/config';
-import useAuth from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import SlotPicker from '@/components/SlotPicker';
 import {
   requestContactsPermission,
-  getContacts,
-  Contact,
+  getPhoneContacts,
+  PhoneContact,
 } from '@/lib/contacts';
 
 type FrequencyOption = 1 | 2 | 4;
@@ -78,9 +78,9 @@ export default function OnboardingScreen() {
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
 
   // Step 1 state
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<PhoneContact[]>([]);
   const [contactSearch, setContactSearch] = useState('');
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [selectedContact, setSelectedContact] = useState<PhoneContact | null>(null);
   const [frequency, setFrequency] = useState<FrequencyOption>(2);
   const [contactsLoaded, setContactsLoaded] = useState(false);
 
@@ -129,7 +129,7 @@ export default function OnboardingScreen() {
     if (contactsLoaded) return;
     const granted = await requestContactsPermission();
     if (granted) {
-      const fetchedContacts = await getContacts();
+      const fetchedContacts = await getPhoneContacts();
       setContacts(fetchedContacts);
     }
     setContactsLoaded(true);
@@ -157,7 +157,7 @@ export default function OnboardingScreen() {
   );
 
   const renderContactItem = useCallback(
-    ({ item }: ListRenderItemInfo<Contact>) => {
+    ({ item }: ListRenderItemInfo<PhoneContact>) => {
       const isSelected = selectedContact?.phone === item.phone;
       return (
         <TouchableOpacity

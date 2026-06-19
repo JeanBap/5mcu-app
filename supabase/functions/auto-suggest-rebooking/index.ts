@@ -54,13 +54,13 @@ serve(async (req: Request) => {
       .select(`
         id,
         user_id,
-        guest_user_id,
+        friend_user_id,
         friend_name,
         frequency_per_month,
         status
       `)
       .eq("status", "active")
-      .not("guest_user_id", "is", null) // Only friends who have signed up
+      .not("friend_user_id", "is", null) // Only friends who have signed up
       .gt("frequency_per_month", 0);
 
     if (linksError) {
@@ -101,13 +101,12 @@ serve(async (req: Request) => {
 
       try {
         // Count bookings this month for this friend link
-        const { count, error: countError } = await supabase
+        // start_time lives on fmcu_availability_slots, so join through slot_id
+        const { data: monthBookings, error: countError } = await supabase
           .from("fmcu_bookings")
-          .select("id", { count: "exact", head: true })
+          .select("id, status, slot:fmcu_availability_slots!slot_id(start_time)")
           .eq("friend_link_id", link.id)
-          .in("status", ["confirmed", "completed"])
-          .gte("start_time", monthStart)
-          .lte("start_time", monthEnd);
+          .in("status", ["confirmed", "completed"]);
 
         if (countError) {
           console.error(`Count error for link ${link.id}:`, countError.message);
@@ -115,7 +114,13 @@ serve(async (req: Request) => {
           continue;
         }
 
-        result.bookingsThisMonth = count || 0;
+        // Filter to bookings whose slot falls within this month
+        const thisMonthBookings = (monthBookings || []).filter((b: any) => {
+          const st = b.slot?.start_time;
+          return st && st >= monthStart && st <= monthEnd;
+        });
+
+        result.bookingsThisMonth = thisMonthBookings.length;
 
         // Calculate if below target, accounting for how far through the month we are
         const dayOfMonth = now.getDate();
@@ -126,16 +131,13 @@ serve(async (req: Request) => {
         result.belowTarget = result.bookingsThisMonth < expectedByNow;
 
         // Also check: are there already future bookings scheduled this month?
-        const { count: futureCount } = await supabase
-          .from("fmcu_bookings")
-          .select("id", { count: "exact", head: true })
-          .eq("friend_link_id", link.id)
-          .eq("status", "confirmed")
-          .gte("start_time", now.toISOString())
-          .lte("start_time", monthEnd);
+        const futureBookings = thisMonthBookings.filter((b: any) => {
+          const st = b.slot?.start_time;
+          return st && st >= now.toISOString() && b.status === "confirmed";
+        });
 
         // If there are already future bookings, the user is on track
-        if ((futureCount || 0) > 0) {
+        if (futureBookings.length > 0) {
           result.belowTarget = false;
           results.push(result);
           continue;
@@ -184,7 +186,7 @@ serve(async (req: Request) => {
           // Send push to the guest (friend)
           try {
             await sendPushToUser(
-              link.guest_user_id,
+              link.friend_user_id,
               "Time for a Catch-Up!",
               `Time to book your next catch-up with ${hostName}!`,
               {
@@ -199,7 +201,7 @@ serve(async (req: Request) => {
             result.notificationSent = true;
           } catch (pushErr) {
             console.error(
-              `Failed to send rebooking push to ${link.guest_user_id}:`,
+              `Failed to send rebooking push to ${link.friend_user_id}:`,
               (pushErr as Error).message,
             );
           }

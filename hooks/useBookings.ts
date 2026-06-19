@@ -2,10 +2,11 @@ import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
 import { Booking } from '@/types/database';
 import { useAuth } from './useAuth';
+import { useFriends } from './useFriends';
 import {
   scheduleCallReminder,
   scheduleCallEndAlert,
-  cancelNotifications,
+  cancelBookingNotifications,
 } from '@/lib/notifications';
 
 interface BookingsState {
@@ -164,13 +165,19 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
       const createdBooking = booking as Booking;
       const scheduledTime = new Date(slot.start_time);
 
+      // Look up the friend name for notification text
+      const friendRecord = useFriends.getState().friends.find(
+        (f) => f.id === friendLinkId
+      );
+      const friendName = friendRecord?.name ?? 'your friend';
+
       // Schedule call reminder notification (e.g. 1 minute before)
       try {
-        await scheduleCallReminder({
-          bookingId: createdBooking.id,
-          scheduledAt: scheduledTime,
-          friendLinkId,
-        });
+        await scheduleCallReminder(
+          createdBooking.id,
+          scheduledTime,
+          friendName,
+        );
       } catch (notifError) {
         console.error('Failed to schedule call reminder:', notifError);
       }
@@ -184,11 +191,12 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
           (b) => new Date(b.scheduled_at) > endTime
         );
 
-        await scheduleCallEndAlert({
-          bookingId: createdBooking.id,
-          endAt: endTime,
+        await scheduleCallEndAlert(
+          createdBooking.id,
+          scheduledTime,
+          friendName,
           hasNextCall,
-        });
+        );
       } catch (notifError) {
         console.error('Failed to schedule call end alert:', notifError);
       }
@@ -249,7 +257,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
 
       // Cancel associated notifications
       try {
-        await cancelNotifications(bookingId);
+        await cancelBookingNotifications(bookingId);
       } catch (notifError) {
         console.error('Failed to cancel notifications:', notifError);
       }

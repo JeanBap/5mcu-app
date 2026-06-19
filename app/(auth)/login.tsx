@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { COLORS } from '@/constants/config';
-import useAuth from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();

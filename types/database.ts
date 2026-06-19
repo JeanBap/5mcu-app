@@ -19,36 +19,36 @@ export interface Database {
       fmcu_profiles: {
         Row: {
           id: string;
-          email: string;
-          full_name: string | null;
+          full_name: string;
+          phone: string | null;
           avatar_url: string | null;
           preferred_video_app: Database["public"]["Enums"]["fmcu_video_app"];
-          timezone: string;
           push_token: string | null;
+          timezone: string;
           is_premium: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
-          email: string;
-          full_name?: string | null;
+          full_name?: string;
+          phone?: string | null;
           avatar_url?: string | null;
           preferred_video_app?: Database["public"]["Enums"]["fmcu_video_app"];
-          timezone?: string;
           push_token?: string | null;
+          timezone?: string;
           is_premium?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          email?: string;
-          full_name?: string | null;
+          full_name?: string;
+          phone?: string | null;
           avatar_url?: string | null;
           preferred_video_app?: Database["public"]["Enums"]["fmcu_video_app"];
-          timezone?: string;
           push_token?: string | null;
+          timezone?: string;
           is_premium?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -62,28 +62,36 @@ export interface Database {
           start_time: string;
           end_time: string;
           is_booked: boolean;
+          booked_by: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
           start_time: string;
-          end_time: string;
           is_booked?: boolean;
+          booked_by?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
           start_time?: string;
-          end_time?: string;
           is_booked?: boolean;
+          booked_by?: string | null;
           created_at?: string;
         };
         Relationships: [
           {
             foreignKeyName: "fmcu_availability_slots_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "fmcu_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fmcu_availability_slots_booked_by_fkey";
+            columns: ["booked_by"];
             isOneToOne: false;
             referencedRelation: "fmcu_profiles";
             referencedColumns: ["id"];
@@ -95,12 +103,11 @@ export interface Database {
           id: string;
           user_id: string;
           friend_user_id: string | null;
-          name: string;
-          phone: string | null;
-          email: string | null;
-          frequency: Database["public"]["Enums"]["frequency_type"];
+          friend_name: string;
+          friend_phone: string | null;
+          friend_email: string | null;
+          frequency_per_month: number;
           status: Database["public"]["Enums"]["fmcu_friend_status"];
-          invite_code: string;
           created_at: string;
           updated_at: string;
         };
@@ -108,12 +115,11 @@ export interface Database {
           id?: string;
           user_id: string;
           friend_user_id?: string | null;
-          name: string;
-          phone?: string | null;
-          email?: string | null;
-          frequency?: Database["public"]["Enums"]["frequency_type"];
+          friend_name: string;
+          friend_phone?: string | null;
+          friend_email?: string | null;
+          frequency_per_month?: number;
           status?: Database["public"]["Enums"]["fmcu_friend_status"];
-          invite_code: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -121,12 +127,11 @@ export interface Database {
           id?: string;
           user_id?: string;
           friend_user_id?: string | null;
-          name?: string;
-          phone?: string | null;
-          email?: string | null;
-          frequency?: Database["public"]["Enums"]["frequency_type"];
+          friend_name?: string;
+          friend_phone?: string | null;
+          friend_email?: string | null;
+          frequency_per_month?: number;
           status?: Database["public"]["Enums"]["fmcu_friend_status"];
-          invite_code?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -151,35 +156,32 @@ export interface Database {
         Row: {
           id: string;
           from_user_id: string;
-          to_email: string | null;
-          to_phone: string | null;
-          friend_link_id: string;
+          to_friend_id: string;
           invite_code: string;
           status: Database["public"]["Enums"]["fmcu_invite_status"];
-          created_at: string;
+          frequency_per_month: number;
           expires_at: string;
+          created_at: string;
         };
         Insert: {
           id?: string;
           from_user_id: string;
-          to_email?: string | null;
-          to_phone?: string | null;
-          friend_link_id: string;
-          invite_code: string;
+          to_friend_id: string;
+          invite_code?: string;
           status?: Database["public"]["Enums"]["fmcu_invite_status"];
+          frequency_per_month?: number;
+          expires_at?: string;
           created_at?: string;
-          expires_at: string;
         };
         Update: {
           id?: string;
           from_user_id?: string;
-          to_email?: string | null;
-          to_phone?: string | null;
-          friend_link_id?: string;
+          to_friend_id?: string;
           invite_code?: string;
           status?: Database["public"]["Enums"]["fmcu_invite_status"];
-          created_at?: string;
+          frequency_per_month?: number;
           expires_at?: string;
+          created_at?: string;
         };
         Relationships: [
           {
@@ -190,8 +192,8 @@ export interface Database {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "fmcu_invites_friend_link_id_fkey";
-            columns: ["friend_link_id"];
+            foreignKeyName: "fmcu_invites_to_friend_id_fkey";
+            columns: ["to_friend_id"];
             isOneToOne: false;
             referencedRelation: "fmcu_friends";
             referencedColumns: ["id"];
@@ -202,37 +204,40 @@ export interface Database {
         Row: {
           id: string;
           slot_id: string;
-          booker_id: string;
+          host_id: string;
+          guest_id: string;
           friend_link_id: string;
           status: Database["public"]["Enums"]["fmcu_booking_status"];
-          video_app: Database["public"]["Enums"]["fmcu_video_app"];
+          video_app: Database["public"]["Enums"]["fmcu_video_app"] | null;
           video_url: string | null;
-          scheduled_at: string;
-          completed_at: string | null;
+          started_at: string | null;
+          ended_at: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           slot_id: string;
-          booker_id: string;
+          host_id: string;
+          guest_id: string;
           friend_link_id: string;
           status?: Database["public"]["Enums"]["fmcu_booking_status"];
-          video_app: Database["public"]["Enums"]["fmcu_video_app"];
+          video_app?: Database["public"]["Enums"]["fmcu_video_app"] | null;
           video_url?: string | null;
-          scheduled_at: string;
-          completed_at?: string | null;
+          started_at?: string | null;
+          ended_at?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           slot_id?: string;
-          booker_id?: string;
+          host_id?: string;
+          guest_id?: string;
           friend_link_id?: string;
           status?: Database["public"]["Enums"]["fmcu_booking_status"];
-          video_app?: Database["public"]["Enums"]["fmcu_video_app"];
+          video_app?: Database["public"]["Enums"]["fmcu_video_app"] | null;
           video_url?: string | null;
-          scheduled_at?: string;
-          completed_at?: string | null;
+          started_at?: string | null;
+          ended_at?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -244,8 +249,15 @@ export interface Database {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "fmcu_bookings_booker_id_fkey";
-            columns: ["booker_id"];
+            foreignKeyName: "fmcu_bookings_host_id_fkey";
+            columns: ["host_id"];
+            isOneToOne: false;
+            referencedRelation: "fmcu_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fmcu_bookings_guest_id_fkey";
+            columns: ["guest_id"];
             isOneToOne: false;
             referencedRelation: "fmcu_profiles";
             referencedColumns: ["id"];
@@ -263,32 +275,32 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          revenue_cat_id: string | null;
-          plan: Database["public"]["Enums"]["plan_type"];
-          status: Database["public"]["Enums"]["subscription_status"];
-          current_period_start: string | null;
-          current_period_end: string | null;
+          tier: Database["public"]["Enums"]["fmcu_sub_tier"];
+          provider: Database["public"]["Enums"]["fmcu_sub_provider"] | null;
+          provider_subscription_id: string | null;
+          expires_at: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          revenue_cat_id?: string | null;
-          plan?: Database["public"]["Enums"]["plan_type"];
-          status?: Database["public"]["Enums"]["subscription_status"];
-          current_period_start?: string | null;
-          current_period_end?: string | null;
+          tier?: Database["public"]["Enums"]["fmcu_sub_tier"];
+          provider?: Database["public"]["Enums"]["fmcu_sub_provider"] | null;
+          provider_subscription_id?: string | null;
+          expires_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          revenue_cat_id?: string | null;
-          plan?: Database["public"]["Enums"]["plan_type"];
-          status?: Database["public"]["Enums"]["subscription_status"];
-          current_period_start?: string | null;
-          current_period_end?: string | null;
+          tier?: Database["public"]["Enums"]["fmcu_sub_tier"];
+          provider?: Database["public"]["Enums"]["fmcu_sub_provider"] | null;
+          provider_subscription_id?: string | null;
+          expires_at?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Relationships: [
           {
@@ -302,15 +314,19 @@ export interface Database {
       };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      fmcu_generate_invite_code: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+    };
     Enums: {
       fmcu_video_app: "whatsapp" | "facetime" | "jitsi" | "zoom";
-      frequency_type: 1 | 2 | 4;
-      fmcu_friend_status: "pending" | "active" | "removed";
-      fmcu_invite_status: "pending" | "accepted" | "expired";
-      fmcu_booking_status: "scheduled" | "completed" | "cancelled" | "missed";
-      plan_type: "free" | "premium";
-      subscription_status: "active" | "cancelled" | "expired";
+      fmcu_friend_status: "pending" | "active" | "paused";
+      fmcu_invite_status: "pending" | "accepted" | "declined" | "expired";
+      fmcu_booking_status: "confirmed" | "completed" | "cancelled" | "no_show";
+      fmcu_sub_tier: "free" | "premium";
+      fmcu_sub_provider: "apple" | "google" | "stripe";
     };
   };
 }
@@ -348,10 +364,8 @@ export type SubscriptionUpdate =
 
 /** Enum convenience types */
 export type VideoAppType = Database["public"]["Enums"]["fmcu_video_app"];
-export type FrequencyType = Database["public"]["Enums"]["frequency_type"];
 export type FriendStatus = Database["public"]["Enums"]["fmcu_friend_status"];
 export type InviteStatus = Database["public"]["Enums"]["fmcu_invite_status"];
 export type BookingStatus = Database["public"]["Enums"]["fmcu_booking_status"];
-export type PlanType = Database["public"]["Enums"]["plan_type"];
-export type SubscriptionStatus =
-  Database["public"]["Enums"]["subscription_status"];
+export type SubTier = Database["public"]["Enums"]["fmcu_sub_tier"];
+export type SubProvider = Database["public"]["Enums"]["fmcu_sub_provider"];

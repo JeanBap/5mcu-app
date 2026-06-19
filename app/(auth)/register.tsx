@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { COLORS } from '@/constants/config';
-import useAuth from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -64,9 +64,7 @@ export default function RegisterScreen() {
 
     setIsSubmitting(true);
     try {
-      await signUpWithEmail(email.trim().toLowerCase(), password, {
-        full_name: fullName.trim(),
-      });
+      await signUpWithEmail(email.trim().toLowerCase(), password, fullName.trim());
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Registration failed. Please try again.';
