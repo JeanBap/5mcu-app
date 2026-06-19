@@ -1,0 +1,60 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate native project
+        run: npx expo prebuild --platform android --clean
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: "https://tosyulolriavzgkpwzrn.supabase.co"
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvc3l1bG9scmlhdnpna3B3enJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0NzIsImV4cCI6MjA5NDM0NzQ3Mn0.LVxiplL8DGVB481AXiEDVGWplfXprMPK_zR8A__6j7M"
+          EXPO_PUBLIC_REVENUECAT_IOS_KEY: "test_CZjSWlZvhpYvapRFuxTMuKXNvGy"
+          EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: "test_CZjSWlZvhpYvapRFuxTMuKXNvGy"
+          EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: "635074351881-hka7ustguldpt5s4nqdf4ul7k34hrvk7.apps.googleusercontent.com"
+          EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: "635074351881-1r4lkhvqgl6ru8ksmo6lfb0ale2k2hte.apps.googleusercontent.com"
+
+      - name: Build debug APK
+        run: |
+          cd android
+          ./gradlew app:assembleDebug --no-daemon
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: "https://tosyulolriavzgkpwzrn.supabase.co"
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvc3l1bG9scmlhdnpna3B3enJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0NzIsImV4cCI6MjA5NDM0NzQ3Mn0.LVxiplL8DGVB481AXiEDVGWplfXprMPK_zR8A__6j7M"
+          EXPO_PUBLIC_REVENUECAT_IOS_KEY: "test_CZjSWlZvhpYvapRFuxTMuKXNvGy"
+          EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: "test_CZjSWlZvhpYvapRFuxTMuKXNvGy"
+          EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: "635074351881-hka7ustguldpt5s4nqdf4ul7k34hrvk7.apps.googleusercontent.com"
+          EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: "635074351881-1r4lkhvqgl6ru8ksmo6lfb0ale2k2hte.apps.googleusercontent.com"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5mcu-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
