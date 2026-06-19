@@ -220,7 +220,7 @@ export default function RegisterScreen() {
               editable={!isSubmitting}
             />
             <Text style={[styles.helperText, { color: secondaryText }]}>
-              Min 8 characters
+              At least 8 characters
             </Text>
 
             <TextInput

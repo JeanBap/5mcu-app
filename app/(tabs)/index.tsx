@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useBookings } from '@/hooks/useBookings';
+import { useFriends } from '@/hooks/useFriends';
 import BookingCard from '@/components/BookingCard';
 import { openVideoCall } from '@/lib/deeplink';
 import { COLORS } from '@/constants/config';
@@ -97,6 +98,7 @@ export default function HomeScreen() {
     getTodaysBookings,
     isLoading,
   } = useBookings();
+  const { getFriendCount } = useFriends();
 
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -135,6 +137,7 @@ export default function HomeScreen() {
     });
   }, [bookings]);
 
+  const friendCount = getFriendCount();
   const firstName = getFirstName(profile?.full_name);
   const greeting = getGreeting();
   const headerDate = formatHeaderDate();
@@ -266,65 +269,48 @@ export default function HomeScreen() {
               onCancel={() => handleCancelBooking(booking)}
             />
           ))
+        ) : friendCount === 0 ? (
+          <View
+            style={[
+              styles.emptyCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+            accessibilityLabel="Add your first friend to get started"
+          >
+            <Text style={styles.emptyEmoji}>👋</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              Add your first friend to get started
+            </Text>
+            <TouchableOpacity
+              style={[styles.emptyButton, { backgroundColor: COLORS.primary }]}
+              onPress={() => router.push('/(tabs)/friends')}
+              accessibilityLabel="Go to Friends tab"
+              accessibilityRole="button"
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyButtonText}>Add a Friend</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <View
             style={[
               styles.emptyCard,
               { backgroundColor: colors.card, borderColor: colors.border },
             ]}
-            accessibilityLabel="No calls scheduled for today"
+            accessibilityLabel="No catch-ups scheduled for today"
           >
             <Text style={styles.emptyEmoji}>📅</Text>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              No calls today
+              No catch-ups today
             </Text>
             <Text
               style={[styles.emptySubtitle, { color: colors.textSecondary }]}
             >
-              Check your schedule to set up your next catch-up
+              Your next one is coming up soon
             </Text>
           </View>
         )}
       </View>
-
-      {/* This Week */}
-      {thisWeekBookings.length > 0 && (
-        <View style={styles.section}>
-          <Text
-            style={[styles.sectionTitle, { color: colors.text }]}
-            accessibilityRole="header"
-          >
-            This Week
-          </Text>
-          {thisWeekBookings.map((booking) => (
-            <View
-              key={booking.id}
-              style={[
-                styles.weekRow,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-              accessibilityLabel={`Call with ${booking.friend.name} on ${formatDayName(booking.scheduled_at)} at ${formatTime(booking.scheduled_at)}`}
-            >
-              <View style={styles.weekRowLeft}>
-                <Text style={[styles.weekRowName, { color: colors.text }]}>
-                  {booking.friend.name}
-                </Text>
-                <Text
-                  style={[
-                    styles.weekRowDay,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  {formatDayName(booking.scheduled_at)}
-                </Text>
-              </View>
-              <Text style={[styles.weekRowTime, { color: COLORS.primary }]}>
-                {formatTime(booking.scheduled_at)}
-              </Text>
-            </View>
-          ))}
-        </View>
-      )}
 
       {/* Quick Actions */}
       <View style={styles.section}>
@@ -369,6 +355,45 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* This Week */}
+      {thisWeekBookings.length > 0 && (
+        <View style={styles.section}>
+          <Text
+            style={[styles.sectionTitle, { color: colors.text }]}
+            accessibilityRole="header"
+          >
+            This Week
+          </Text>
+          {thisWeekBookings.map((booking) => (
+            <View
+              key={booking.id}
+              style={[
+                styles.weekRow,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              accessibilityLabel={`Call with ${booking.friend.name} on ${formatDayName(booking.scheduled_at)} at ${formatTime(booking.scheduled_at)}`}
+            >
+              <View style={styles.weekRowLeft}>
+                <Text style={[styles.weekRowName, { color: colors.text }]}>
+                  {booking.friend.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.weekRowDay,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {formatDayName(booking.scheduled_at)}
+                </Text>
+              </View>
+              <Text style={[styles.weekRowTime, { color: COLORS.primary }]}>
+                {formatTime(booking.scheduled_at)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -443,12 +468,24 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  emptyButton: {
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  emptyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
   weekRow: {
     flexDirection: 'row',

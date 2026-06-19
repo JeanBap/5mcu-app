@@ -59,11 +59,7 @@ const VIDEO_APPS: VideoApp[] = [
   },
 ];
 
-const FREQUENCY_OPTIONS: { value: FrequencyOption; label: string }[] = [
-  { value: 1, label: '1x' },
-  { value: 2, label: '2x' },
-  { value: 4, label: '4x' },
-];
+// FREQUENCY_OPTIONS imported from @/constants/config
 
 const TOTAL_STEPS = 3;
 
@@ -362,7 +358,10 @@ export default function OnboardingScreen() {
                     borderColor: COLORS.primary,
                   },
                 ]}
-                onPress={() => setFrequency(opt.value)}
+                onPress={() => {
+                  // TODO: Add Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) when expo-haptics is installed
+                  setFrequency(opt.value);
+                }}
                 accessibilityRole="button"
                 accessibilityLabel={opt.label}
                 accessibilityState={{ selected: frequency === opt.value }}
@@ -633,7 +632,7 @@ const styles = StyleSheet.create({
   },
   frequencyButton: {
     width: '23%' as any,
-    height: 40,
+    minHeight: 44,
     borderWidth: 1,
     borderRadius: 10,
     alignItems: 'center',

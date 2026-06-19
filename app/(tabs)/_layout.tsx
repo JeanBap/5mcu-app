@@ -9,7 +9,7 @@ type TabBarIconProps = {
 
 const TAB_CONFIG = [
   { name: 'index', title: 'Home', icon: '🏠', label: 'Home tab' },
-  { name: 'schedule', title: 'Schedule', icon: '📅', label: 'Schedule tab' },
+  { name: 'schedule', title: 'Availability', icon: '📅', label: 'Availability tab' },
   { name: 'friends', title: 'Friends', icon: '👥', label: 'Friends tab' },
   { name: 'settings', title: 'Settings', icon: '⚙️', label: 'Settings tab' },
 ] as const;

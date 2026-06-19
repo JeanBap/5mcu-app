@@ -15,7 +15,6 @@ import { format } from 'date-fns';
 import { COLORS, APP_CONFIG } from '@/constants/config';
 import { useSlots } from '@/hooks/useSlots';
 import { useAuth } from '@/hooks/useAuth';
-import SlotPicker from '@/components/SlotPicker';
 import PaywallModal from '@/components/PaywallModal';
 import type { AvailabilitySlot } from '@/types/database';
 
@@ -199,7 +198,6 @@ export default function ScheduleScreen() {
   const {
     slots,
     fetchSlots,
-    createSlots,
     deleteSlot,
     createQuickSlots,
     getSlotsByDate,
@@ -220,11 +218,6 @@ export default function ScheduleScreen() {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
-  const [pendingSlots, setPendingSlots] = useState<
-    { start_time: string; end_time: string }[]
-  >([]);
-
-  const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [paywallVisible, setPaywallVisible] = useState(false);
 
@@ -247,10 +240,6 @@ export default function ScheduleScreen() {
     [getSlotsByDate, selectedDate, slots],
   );
 
-  const existingSlotsForPicker: AvailabilitySlot[] = useMemo(
-    () => getSlotsByDate(selectedDate),
-    [getSlotsByDate, selectedDate, slots],
-  );
 
   /* ---------- effects ---------- */
 
@@ -278,39 +267,7 @@ export default function ScheduleScreen() {
 
   const handleSelectDate = useCallback((date: Date) => {
     setSelectedDate(new Date(date.getFullYear(), date.getMonth(), date.getDate()));
-    setPendingSlots([]);
   }, []);
-
-  const handleSlotsChange = useCallback(
-    (newSlots: { start_time: string; end_time: string }[]) => {
-      setPendingSlots(newSlots);
-    },
-    [],
-  );
-
-  const handleSaveSlots = useCallback(async () => {
-    if (pendingSlots.length === 0) {
-      Alert.alert('No Slots Selected', 'Please select time slots before saving.');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await createSlots(pendingSlots);
-      setPendingSlots([]);
-      Alert.alert('Slots Saved', `${pendingSlots.length} slot${pendingSlots.length > 1 ? 's' : ''} created successfully.`);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to save slots. Please try again.';
-      if (message.includes('Upgrade to premium') || message.includes('limited to')) {
-        setPaywallVisible(true);
-      } else {
-        Alert.alert('Error', message);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  }, [pendingSlots, createSlots]);
 
   const handleDeleteSlot = useCallback(
     (slotId: string, slotTime: string) => {
@@ -529,17 +486,15 @@ export default function ScheduleScreen() {
   );
 
   const renderQuickActions = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.quickActionsContent}
-      style={styles.quickActionsScroll}
-    >
+    <View style={styles.quickActionsRow}>
       {QUICK_ACTIONS.map((action) => (
         <TouchableOpacity
           key={action.label}
           style={[styles.quickActionPill, { backgroundColor: cardBg, borderColor }]}
-          onPress={() => handleQuickAction(action)}
+          onPress={() => {
+            // TODO: Add Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) when expo-haptics is installed
+            handleQuickAction(action);
+          }}
           disabled={isLoading}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -551,7 +506,7 @@ export default function ScheduleScreen() {
           </Text>
         </TouchableOpacity>
       ))}
-    </ScrollView>
+    </View>
   );
 
   const renderSlotRow = (slot: Slot) => {
@@ -607,7 +562,7 @@ export default function ScheduleScreen() {
       return (
         <View style={styles.emptyState}>
           <Text style={[styles.emptyStateText, { color: secondaryText }]}>
-            No slots for {format(selectedDate, 'MMMM d')}. Use the time picker above to add some.
+            No slots for {format(selectedDate, 'MMMM d')}. Use the quick add buttons above.
           </Text>
         </View>
       );
@@ -640,9 +595,6 @@ export default function ScheduleScreen() {
           />
         }
       >
-        {/* Quick action pills */}
-        {renderQuickActions()}
-
         {/* Calendar */}
         {renderCalendar()}
 
@@ -662,41 +614,11 @@ export default function ScheduleScreen() {
             {format(selectedDate, 'EEEE, MMMM d')}
           </Text>
 
-          {/* Slot picker */}
-          <SlotPicker
-            date={selectedDate}
-            existingSlots={existingSlotsForPicker}
-            onSlotsChange={handleSlotsChange}
-            disabled={isSaving}
-          />
-
-          {/* Save button */}
-          {pendingSlots.length > 0 && (
-            <TouchableOpacity
-              style={[
-                styles.saveButton,
-                {
-                  backgroundColor: isSaving
-                    ? `${COLORS.primary}80`
-                    : COLORS.primary,
-                },
-              ]}
-              onPress={handleSaveSlots}
-              disabled={isSaving}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={`Save ${pendingSlots.length} slot${pendingSlots.length > 1 ? 's' : ''}`}
-              accessibilityState={{ disabled: isSaving }}
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Text style={styles.saveButtonText}>
-                  Save Slots ({pendingSlots.length})
-                </Text>
-              )}
-            </TouchableOpacity>
-          )}
+          {/* Quick add for selected date */}
+          <Text style={[styles.quickAddLabel, { color: secondaryText }]}>
+            Quick add for {format(selectedDate, 'MMM d')}
+          </Text>
+          {renderQuickActions()}
 
           {/* Existing slots for selected date */}
           {renderDaySlots()}
@@ -745,19 +667,27 @@ const styles = StyleSheet.create({
   },
 
   /* Quick actions */
-  quickActionsScroll: {
-    marginTop: 16,
-    marginBottom: 12,
+  quickAddLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  quickActionsContent: {
-    paddingHorizontal: 16,
+  quickActionsRow: {
+    flexDirection: 'row',
     gap: 10,
+    marginBottom: 16,
   },
   quickActionPill: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
+    minHeight: 44,
     borderRadius: 20,
     borderWidth: 1,
     gap: 6,
@@ -883,21 +813,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 12,
-  },
-
-  /* Save button */
-  saveButton: {
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    minHeight: 52,
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
   },
 
   /* Slots list */

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   View,
   Text,
   TextInput,
@@ -19,7 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { signInWithEmail, signInWithGoogle, signInWithApple, isLoading } = useAuth();
+  const { signInWithEmail, signInWithGoogle, signInWithApple, resetPassword, isLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,6 +69,23 @@ export default function LoginScreen() {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Apple sign in failed.';
+      setError(message);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError('Enter your email above, then tap Forgot Password.');
+      return;
+    }
+    try {
+      await resetPassword(email.trim().toLowerCase());
+      Alert.alert(
+        'Check your email',
+        'We sent a password reset link to ' + email.trim() + '. It may take a minute to arrive.',
+      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to send reset email.';
       setError(message);
     }
   };
@@ -161,6 +179,17 @@ export default function LoginScreen() {
               accessibilityHint="Enter your account password"
               editable={!isSubmitting}
             />
+
+            <TouchableOpacity
+              onPress={handleForgotPassword}
+              accessibilityRole="link"
+              accessibilityLabel="Forgot your password"
+              style={styles.forgotPassword}
+            >
+              <Text style={[styles.forgotPasswordText, { color: secondaryText }]}>
+                Forgot password?
+              </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.primaryButton, { backgroundColor: COLORS.primary }]}
@@ -373,5 +402,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginTop: -4,
+    marginBottom: 8,
+    paddingVertical: 4,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
   },
 });

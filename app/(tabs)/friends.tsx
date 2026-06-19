@@ -38,8 +38,6 @@ interface AddFriendForm {
   frequency: number;
 }
 
-type ModalTab = 'contacts' | 'manual';
-
 const INITIAL_FORM: AddFriendForm = {
   name: '',
   phone: '',
@@ -69,11 +67,9 @@ export default function FriendsScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [paywallVisible, setPaywallVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<ModalTab>('manual');
   const [form, setForm] = useState<AddFriendForm>(INITIAL_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [contactSearch, setContactSearch] = useState('');
 
   const isPremium = profile?.is_premium === true;
   const friendCount = getFriendCount();
@@ -100,8 +96,6 @@ export default function FriendsScreen() {
       return;
     }
     setForm(INITIAL_FORM);
-    setActiveTab('manual');
-    setContactSearch('');
     setModalVisible(true);
   };
 
@@ -112,10 +106,11 @@ export default function FriendsScreen() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      Alert.alert('Validation', 'Name is required.');
+      Alert.alert('Missing info', 'Please enter your friend\'s name to continue.');
       return;
     }
 
+    // TODO: Add Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) when expo-haptics is installed
     setIsSubmitting(true);
     try {
       const newFriend = await addFriend(
@@ -198,7 +193,7 @@ export default function FriendsScreen() {
     return (
       <View style={[styles.banner, { backgroundColor: COLORS.warning }]}>
         <Text style={styles.bannerText}>
-          You've reached the free limit of {APP_CONFIG.maxFreeFriends} friends.
+          You&apos;re connected with {APP_CONFIG.maxFreeFriends} friends — upgrade to add more.
         </Text>
         <Pressable
           onPress={() => setPaywallVisible(true)}
@@ -208,31 +203,6 @@ export default function FriendsScreen() {
           <Text style={styles.bannerUpgrade}>Upgrade</Text>
         </Pressable>
       </View>
-    );
-  };
-
-  const renderTabButton = (tab: ModalTab, label: string) => {
-    const isSelected = activeTab === tab;
-    return (
-      <Pressable
-        style={[
-          styles.tabButton,
-          { backgroundColor: isSelected ? COLORS.primary : cardBg },
-        ]}
-        onPress={() => setActiveTab(tab)}
-        accessibilityLabel={label}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: isSelected }}
-      >
-        <Text
-          style={[
-            styles.tabButtonText,
-            { color: isSelected ? '#FFFFFF' : textSecondary },
-          ]}
-        >
-          {label}
-        </Text>
-      </Pressable>
     );
   };
 
@@ -247,7 +217,10 @@ export default function FriendsScreen() {
               styles.frequencyPill,
               { backgroundColor: isSelected ? COLORS.primary : cardBg },
             ]}
-            onPress={() => setForm((prev) => ({ ...prev, frequency: option.value }))}
+            onPress={() => {
+              // TODO: Add Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) when expo-haptics is installed
+              setForm((prev) => ({ ...prev, frequency: option.value }));
+            }}
             accessibilityLabel={`Set frequency to ${option.label}`}
             accessibilityRole="radio"
             accessibilityState={{ selected: isSelected }}
@@ -263,35 +236,6 @@ export default function FriendsScreen() {
           </Pressable>
         );
       })}
-    </View>
-  );
-
-  const renderContactsTab = () => (
-    <View style={styles.contactsContainer}>
-      <View style={[styles.searchBar, { backgroundColor: cardBg, borderColor }]}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={[styles.searchInput, { color: textColor }]}
-          placeholder="Search contacts..."
-          placeholderTextColor={textSecondary}
-          value={contactSearch}
-          onChangeText={setContactSearch}
-          accessibilityLabel="Search contacts"
-        />
-      </View>
-      <View style={styles.contactsMessage}>
-        <Text style={[styles.contactsMessageText, { color: textSecondary }]}>
-          Contact access requires permission. Use Manual Entry to add friends directly.
-        </Text>
-        <Pressable
-          style={[styles.switchTabButton, { backgroundColor: COLORS.primary }]}
-          onPress={() => setActiveTab('manual')}
-          accessibilityLabel="Switch to manual entry"
-          accessibilityRole="button"
-        >
-          <Text style={styles.switchTabButtonText}>Switch to Manual Entry</Text>
-        </Pressable>
-      </View>
     </View>
   );
 
@@ -422,14 +366,8 @@ export default function FriendsScreen() {
             </Pressable>
           </View>
 
-          {/* Tab toggle */}
-          <View style={[styles.tabRow, { backgroundColor: cardBg }]}>
-            {renderTabButton('contacts', 'From Contacts')}
-            {renderTabButton('manual', 'Manual Entry')}
-          </View>
-
-          {/* Tab content */}
-          {activeTab === 'contacts' ? renderContactsTab() : renderManualTab()}
+          {/* Add friend form */}
+          {renderManualTab()}
         </View>
       </Modal>
 
@@ -596,67 +534,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '500',
   },
-  tabRow: {
-    flexDirection: 'row',
-    marginHorizontal: 24,
-    marginTop: 16,
-    borderRadius: 10,
-    padding: 4,
-    gap: 4,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  tabButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  contactsContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 20,
-  },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    padding: 0,
-  },
-  contactsMessage: {
-    alignItems: 'center',
-    paddingTop: 40,
-  },
-  contactsMessageText: {
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  switchTabButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  switchTabButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
   formContainer: {
     flex: 1,
     paddingHorizontal: 24,
@@ -685,8 +562,10 @@ const styles = StyleSheet.create({
   frequencyPill: {
     width: '23%' as any,
     paddingVertical: 8,
+    minHeight: 44,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   frequencyPillText: {
     fontSize: 12,

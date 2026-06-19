@@ -126,7 +126,7 @@ export default function SettingsScreen() {
   };
 
   const handlePhotoPress = () => {
-    Alert.alert('Coming Soon', 'Photo upload coming soon');
+    Alert.alert('Not quite ready', 'Photo upload is on its way.');
   };
 
   const handleSelectVideoApp = (appId: string) => {
@@ -151,7 +151,7 @@ export default function SettingsScreen() {
   };
 
   const handleRestore = () => {
-    Alert.alert('Coming Soon', 'Restore functionality coming soon');
+    Alert.alert('Not quite ready', 'Restore purchases is on its way.');
   };
 
   const handleSignOut = () => {

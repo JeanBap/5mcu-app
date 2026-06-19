@@ -49,6 +49,8 @@ interface AuthActions {
   signInWithApple: () => Promise<void>;
   /** Sign out and reset all auth state */
   signOut: () => Promise<void>;
+  /** Send password reset email */
+  resetPassword: (email: string) => Promise<void>;
   /** Update the user profile in the database and local state */
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   /** Re-fetch the user profile from the database */
@@ -289,6 +291,15 @@ export const useAuth = create<AuthState & AuthActions>()(
         } catch (error) {
           set({ isLoading: false });
           throw error;
+        }
+      },
+
+      resetPassword: async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: 'fivemcu://reset-password',
+        });
+        if (error) {
+          throw new Error(error.message);
         }
       },
 

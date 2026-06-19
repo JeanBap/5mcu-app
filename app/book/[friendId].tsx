@@ -52,7 +52,7 @@ export default function BookCallScreen() {
   const { friendId } = useLocalSearchParams<{ friendId: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const { getAvailableSlotsForFriend } = useSlots();
   const { createBooking } = useBookings();
 
@@ -195,6 +195,8 @@ export default function BookCallScreen() {
   const handleConfirmBooking = async () => {
     if (!selectedSlot || !friendId || booking) return;
 
+    // TODO: Add Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) here when expo-haptics is installed
+
     try {
       setBooking(true);
       await createBooking(selectedSlot.id, friendId);
@@ -204,7 +206,22 @@ export default function BookCallScreen() {
         [
           {
             text: 'OK',
-            onPress: () => router.replace('/(tabs)/'),
+            onPress: () => {
+              router.replace('/(tabs)/');
+              // Soft paywall upsell for non-premium users
+              if (!profile?.is_premium) {
+                setTimeout(() => {
+                  Alert.alert(
+                    'Nice! Your catch-up is booked',
+                    'Upgrade to Premium for unlimited friends, priority scheduling, and no limits on availability slots.',
+                    [
+                      { text: 'Maybe later', style: 'cancel' },
+                      { text: 'Learn more', onPress: () => router.push('/(tabs)/settings') },
+                    ],
+                  );
+                }, 500);
+              }
+            },
           },
         ]
       );
