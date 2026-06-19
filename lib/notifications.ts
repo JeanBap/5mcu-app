@@ -40,7 +40,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { error } = await supabase
-        .from('profiles')
+        .from('fmcu_profiles')
         .update({ push_token: token })
         .eq('id', user.id);
 

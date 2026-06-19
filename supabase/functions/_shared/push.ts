@@ -77,7 +77,7 @@ export async function sendPushToUser(
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   const { data: profile, error } = await supabase
-    .from("profiles")
+    .from("fmcu_profiles")
     .select("push_token, full_name")
     .eq("id", userId)
     .single();

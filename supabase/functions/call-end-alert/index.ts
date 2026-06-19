@@ -53,7 +53,7 @@ serve(async (req: Request) => {
     const endWindowEnd = new Date(now.getTime() - CALL_DURATION_MS + 15 * 1000).toISOString();
 
     const { data: endingBookings, error: queryError } = await supabase
-      .from("bookings")
+      .from("fmcu_bookings")
       .select(`
         id,
         host_id,
@@ -104,7 +104,7 @@ serve(async (req: Request) => {
 
         // Host's next call
         const { data: hostNextBookings } = await supabase
-          .from("bookings")
+          .from("fmcu_bookings")
           .select("id, guest_id, start_time, friend_link_id")
           .eq("host_id", booking.host_id)
           .eq("status", "confirmed")
@@ -116,7 +116,7 @@ serve(async (req: Request) => {
 
         // Guest's next call (they might be host or guest in other bookings)
         const { data: guestNextAsHost } = await supabase
-          .from("bookings")
+          .from("fmcu_bookings")
           .select("id, guest_id, start_time, friend_link_id")
           .eq("host_id", booking.guest_id)
           .eq("status", "confirmed")
@@ -127,7 +127,7 @@ serve(async (req: Request) => {
           .limit(1);
 
         const { data: guestNextAsGuest } = await supabase
-          .from("bookings")
+          .from("fmcu_bookings")
           .select("id, host_id, start_time, friend_link_id")
           .eq("guest_id", booking.guest_id)
           .eq("status", "confirmed")
@@ -150,13 +150,13 @@ serve(async (req: Request) => {
 
         // Look up names for personalized messages
         const { data: hostProfile } = await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .select("full_name")
           .eq("id", booking.host_id)
           .single();
 
         const { data: guestProfile } = await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .select("full_name")
           .eq("id", booking.guest_id)
           .single();
@@ -172,7 +172,7 @@ serve(async (req: Request) => {
             // Look up the next friend's name
             const nextFriendId = hostNextCall.guest_id;
             const { data: nextFriend } = await supabase
-              .from("profiles")
+              .from("fmcu_profiles")
               .select("full_name")
               .eq("id", nextFriendId)
               .single();
@@ -200,7 +200,7 @@ serve(async (req: Request) => {
             const nextPersonId =
               "host_id" in guestNextCall ? guestNextCall.host_id : guestNextCall.guest_id;
             const { data: nextPerson } = await supabase
-              .from("profiles")
+              .from("fmcu_profiles")
               .select("full_name")
               .eq("id", nextPersonId)
               .single();
@@ -223,7 +223,7 @@ serve(async (req: Request) => {
 
         // Mark booking as completed
         const { error: updateError } = await supabase
-          .from("bookings")
+          .from("fmcu_bookings")
           .update({ status: "completed" })
           .eq("id", booking.id);
 

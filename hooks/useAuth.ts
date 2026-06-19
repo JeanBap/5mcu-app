@@ -60,7 +60,7 @@ interface AuthActions {
  */
 async function fetchProfileById(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
-    .from('profiles')
+    .from('fmcu_profiles')
     .select('*')
     .eq('id', userId)
     .single();
@@ -172,7 +172,7 @@ export const useAuth = create<AuthState & AuthActions>()(
           if (data.user) {
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const { error: profileError } = await supabase
-              .from('profiles')
+              .from('fmcu_profiles')
               .upsert({
                 id: data.user.id,
                 full_name: fullName,
@@ -301,7 +301,7 @@ export const useAuth = create<AuthState & AuthActions>()(
         set({ isLoading: true });
         try {
           const { data, error } = await supabase
-            .from('profiles')
+            .from('fmcu_profiles')
             .update({
               ...updates,
               updated_at: new Date().toISOString(),

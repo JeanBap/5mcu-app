@@ -97,7 +97,7 @@ serve(async (req: Request) => {
 
     // Check if user exists
     const { data: profile, error: profileError } = await supabase
-      .from("profiles")
+      .from("fmcu_profiles")
       .select("id, is_premium")
       .eq("id", userId)
       .single();
@@ -107,7 +107,7 @@ serve(async (req: Request) => {
       let resolvedUserId: string | null = null;
       for (const alias of event.aliases || []) {
         const { data: aliasProfile } = await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .select("id")
           .eq("id", alias)
           .single();
@@ -133,7 +133,7 @@ serve(async (req: Request) => {
     switch (event.type) {
       case "INITIAL_PURCHASE": {
         // New subscription -- create or update subscription record
-        await supabase.from("subscriptions").upsert(
+        await supabase.from("fmcu_subscriptions").upsert(
           {
             user_id: resolvedUserId,
             revenuecat_id: event.original_transaction_id,
@@ -156,7 +156,7 @@ serve(async (req: Request) => {
 
         // Set premium flag
         await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .update({ is_premium: true })
           .eq("id", resolvedUserId);
 
@@ -167,7 +167,7 @@ serve(async (req: Request) => {
       case "RENEWAL": {
         // Subscription renewed
         await supabase
-          .from("subscriptions")
+          .from("fmcu_subscriptions")
           .update({
             status: "active",
             expires_at: event.expiration_at_ms
@@ -179,7 +179,7 @@ serve(async (req: Request) => {
           .eq("user_id", resolvedUserId);
 
         await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .update({ is_premium: true })
           .eq("id", resolvedUserId);
 
@@ -190,7 +190,7 @@ serve(async (req: Request) => {
       case "CANCELLATION": {
         // Subscription cancelled but still active until expiration
         await supabase
-          .from("subscriptions")
+          .from("fmcu_subscriptions")
           .update({
             status: "cancelled",
             cancellation_reason: event.cancellation_reason || null,
@@ -206,7 +206,7 @@ serve(async (req: Request) => {
       case "EXPIRATION": {
         // Subscription expired -- revoke access
         await supabase
-          .from("subscriptions")
+          .from("fmcu_subscriptions")
           .update({
             status: "expired",
             expires_at: event.expiration_at_ms
@@ -216,7 +216,7 @@ serve(async (req: Request) => {
           .eq("user_id", resolvedUserId);
 
         await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .update({ is_premium: false })
           .eq("id", resolvedUserId);
 
@@ -227,7 +227,7 @@ serve(async (req: Request) => {
       case "PRODUCT_CHANGE": {
         // Plan change (upgrade/downgrade)
         await supabase
-          .from("subscriptions")
+          .from("fmcu_subscriptions")
           .update({
             product_id: event.product_id,
             status: "active",
@@ -244,7 +244,7 @@ serve(async (req: Request) => {
       case "BILLING_ISSUE": {
         // Payment failure -- mark as billing issue but don't revoke yet
         await supabase
-          .from("subscriptions")
+          .from("fmcu_subscriptions")
           .update({ status: "billing_issue" })
           .eq("user_id", resolvedUserId);
 
@@ -266,7 +266,7 @@ serve(async (req: Request) => {
     }
 
     // Log the event for audit trail
-    await supabase.from("subscription_events").insert({
+    await supabase.from("fmcu_subscription_events").insert({
       user_id: resolvedUserId,
       event_type: event.type,
       event_id: event.id,

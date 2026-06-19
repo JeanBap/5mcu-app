@@ -50,7 +50,7 @@ serve(async (req: Request) => {
 
     // Fetch all active friend links with their frequency settings
     const { data: friendLinks, error: linksError } = await supabase
-      .from("friend_links")
+      .from("fmcu_friends")
       .select(`
         id,
         user_id,
@@ -102,7 +102,7 @@ serve(async (req: Request) => {
       try {
         // Count bookings this month for this friend link
         const { count, error: countError } = await supabase
-          .from("bookings")
+          .from("fmcu_bookings")
           .select("id", { count: "exact", head: true })
           .eq("friend_link_id", link.id)
           .in("status", ["confirmed", "completed"])
@@ -127,7 +127,7 @@ serve(async (req: Request) => {
 
         // Also check: are there already future bookings scheduled this month?
         const { count: futureCount } = await supabase
-          .from("bookings")
+          .from("fmcu_bookings")
           .select("id", { count: "exact", head: true })
           .eq("friend_link_id", link.id)
           .eq("status", "confirmed")
@@ -148,7 +148,7 @@ serve(async (req: Request) => {
 
         // Find next available slot for the host
         const { data: availableSlots } = await supabase
-          .from("availability_slots")
+          .from("fmcu_availability_slots")
           .select("id, start_time, end_time")
           .eq("user_id", link.user_id)
           .eq("is_booked", false)
@@ -158,7 +158,7 @@ serve(async (req: Request) => {
 
         // Get host name for the notification
         const { data: hostProfile } = await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .select("full_name")
           .eq("id", link.user_id)
           .single();

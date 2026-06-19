@@ -73,10 +73,10 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
       const now = new Date().toISOString();
 
       const { data, error } = await supabase
-        .from('bookings')
+        .from('fmcu_bookings')
         .select(`
           *,
-          friend:friends!friend_link_id (
+          friend:fmcu_friends!friend_link_id (
             id,
             name,
             phone,
@@ -108,7 +108,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
     try {
       // Get the slot details for the scheduled time
       const { data: slot, error: slotError } = await supabase
-        .from('availability_slots')
+        .from('fmcu_availability_slots')
         .select('*')
         .eq('id', slotId)
         .single();
@@ -133,7 +133,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
 
       // Insert the booking
       const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
+        .from('fmcu_bookings')
         .insert({
           slot_id: slotId,
           booker_id: user.id,
@@ -152,7 +152,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
 
       // Mark the slot as booked
       const { error: slotUpdateError } = await supabase
-        .from('availability_slots')
+        .from('fmcu_availability_slots')
         .update({ is_booked: true })
         .eq('id', slotId);
 
@@ -214,7 +214,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
     try {
       // Get the booking to find the associated slot
       const { data: booking, error: fetchError } = await supabase
-        .from('bookings')
+        .from('fmcu_bookings')
         .select('*')
         .eq('id', bookingId)
         .eq('booker_id', user.id)
@@ -226,7 +226,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
 
       // Update booking status to cancelled
       const { error: cancelError } = await supabase
-        .from('bookings')
+        .from('fmcu_bookings')
         .update({
           status: 'cancelled',
           updated_at: new Date().toISOString(),
@@ -239,7 +239,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
 
       // Free up the slot
       const { error: slotError } = await supabase
-        .from('availability_slots')
+        .from('fmcu_availability_slots')
         .update({ is_booked: false })
         .eq('id', booking.slot_id);
 
@@ -273,7 +273,7 @@ export const useBookings = create<BookingsState & BookingsActions>()((set, get) 
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('bookings')
+        .from('fmcu_bookings')
         .update({
           status: 'completed',
           completed_at: new Date().toISOString(),

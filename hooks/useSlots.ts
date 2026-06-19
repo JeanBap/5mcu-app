@@ -71,7 +71,7 @@ export const useSlots = create<SlotsState & SlotsActions>()((set, get) => ({
       const { start, end } = getMonthBounds(month);
 
       const { data, error } = await supabase
-        .from('availability_slots')
+        .from('fmcu_availability_slots')
         .select('*')
         .eq('user_id', user.id)
         .gte('start_time', start)
@@ -100,7 +100,7 @@ export const useSlots = create<SlotsState & SlotsActions>()((set, get) => ({
 
       if (!isPremium) {
         const { count, error: countError } = await supabase
-          .from('availability_slots')
+          .from('fmcu_availability_slots')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id);
 
@@ -126,7 +126,7 @@ export const useSlots = create<SlotsState & SlotsActions>()((set, get) => ({
       }));
 
       const { data, error } = await supabase
-        .from('availability_slots')
+        .from('fmcu_availability_slots')
         .insert(slotsToInsert)
         .select();
 
@@ -159,7 +159,7 @@ export const useSlots = create<SlotsState & SlotsActions>()((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('availability_slots')
+        .from('fmcu_availability_slots')
         .delete()
         .eq('id', slotId)
         .eq('user_id', user.id)
@@ -187,7 +187,7 @@ export const useSlots = create<SlotsState & SlotsActions>()((set, get) => ({
       const now = new Date().toISOString();
 
       const { data, error } = await supabase
-        .from('availability_slots')
+        .from('fmcu_availability_slots')
         .select('*')
         .eq('user_id', userId)
         .eq('is_booked', false)

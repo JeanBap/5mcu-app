@@ -79,7 +79,7 @@ export default function AcceptInviteScreen() {
       setScreenState('loading');
 
       const { data: inviteData, error: inviteError } = await supabase
-        .from('invites')
+        .from('fmcu_invites')
         .select('*')
         .eq('invite_code', inviteCode)
         .eq('status', 'pending')
@@ -101,7 +101,7 @@ export default function AcceptInviteScreen() {
       setInvite(inviteData as InviteData);
 
       const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+        .from('fmcu_profiles')
         .select('id, full_name, avatar_url')
         .eq('id', inviteData.from_user_id)
         .single();
@@ -115,7 +115,7 @@ export default function AcceptInviteScreen() {
       setInviter(profileData as InviterProfile);
 
       const { data: friendData } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .select('id, frequency')
         .eq('invite_id', inviteData.id)
         .single();

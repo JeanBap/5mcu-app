@@ -50,7 +50,7 @@ serve(async (req: Request) => {
     const windowEnd = new Date(now.getTime() + 75 * 1000).toISOString();
 
     const { data: upcomingBookings, error: queryError } = await supabase
-      .from("bookings")
+      .from("fmcu_bookings")
       .select(`
         id,
         host_id,
@@ -98,13 +98,13 @@ serve(async (req: Request) => {
       try {
         // Get names for personalized messages
         const { data: hostProfile } = await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .select("full_name, push_token, phone")
           .eq("id", booking.host_id)
           .single();
 
         const { data: guestProfile } = await supabase
-          .from("profiles")
+          .from("fmcu_profiles")
           .select("full_name, push_token, phone")
           .eq("id", booking.guest_id)
           .single();
@@ -149,7 +149,7 @@ serve(async (req: Request) => {
 
         // Mark booking as reminder_sent to avoid duplicate notifications
         await supabase
-          .from("bookings")
+          .from("fmcu_bookings")
           .update({ reminder_sent: true })
           .eq("id", booking.id)
           .eq("reminder_sent", false); // Only update if not already sent

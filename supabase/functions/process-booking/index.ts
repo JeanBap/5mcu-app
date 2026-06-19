@@ -66,7 +66,7 @@ serve(async (req: Request) => {
 
     // 1. Validate slot exists and is not already booked
     const { data: slot, error: slotError } = await supabase
-      .from("availability_slots")
+      .from("fmcu_availability_slots")
       .select("id, user_id, start_time, end_time, is_booked, video_app")
       .eq("id", slot_id)
       .single();
@@ -95,7 +95,7 @@ serve(async (req: Request) => {
 
     // 3. Validate friend link exists and guest has a valid invite
     const { data: friendLink, error: friendError } = await supabase
-      .from("friend_links")
+      .from("fmcu_friends")
       .select("id, user_id, friend_name, guest_user_id")
       .eq("id", friend_link_id)
       .single();
@@ -129,7 +129,7 @@ serve(async (req: Request) => {
 
     // Check for a valid (non-expired) invite
     const { data: invite } = await supabase
-      .from("invites")
+      .from("fmcu_invites")
       .select("id, status, expires_at")
       .eq("friend_link_id", friend_link_id)
       .eq("status", "accepted")
@@ -169,7 +169,7 @@ serve(async (req: Request) => {
     ).toISOString();
 
     const { data: booking, error: bookingError } = await supabase
-      .from("bookings")
+      .from("fmcu_bookings")
       .insert({
         id: bookingId,
         slot_id: slot.id,
@@ -194,7 +194,7 @@ serve(async (req: Request) => {
 
     // 5. Mark slot as booked
     const { error: updateError } = await supabase
-      .from("availability_slots")
+      .from("fmcu_availability_slots")
       .update({ is_booked: true, booking_id: bookingId })
       .eq("id", slot_id);
 
@@ -205,7 +205,7 @@ serve(async (req: Request) => {
 
     // 6. Get guest name for notification
     const { data: guestProfile } = await supabase
-      .from("profiles")
+      .from("fmcu_profiles")
       .select("full_name")
       .eq("id", guest_id)
       .single();

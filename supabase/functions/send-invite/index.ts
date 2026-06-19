@@ -81,7 +81,7 @@ serve(async (req: Request) => {
 
     // Verify friend relationship exists
     const { data: friendLink, error: friendError } = await supabase
-      .from("friend_links")
+      .from("fmcu_friends")
       .select("id, friend_name, friend_phone, friend_email")
       .eq("id", friend_id)
       .eq("user_id", user.id)
@@ -100,7 +100,7 @@ serve(async (req: Request) => {
     do {
       inviteCode = generateInviteCode();
       const { data: existing } = await supabase
-        .from("invites")
+        .from("fmcu_invites")
         .select("id")
         .eq("code", inviteCode)
         .single();
@@ -119,7 +119,7 @@ serve(async (req: Request) => {
 
     // Fetch inviter's profile for the message
     const { data: inviterProfile } = await supabase
-      .from("profiles")
+      .from("fmcu_profiles")
       .select("full_name")
       .eq("id", user.id)
       .single();
@@ -128,7 +128,7 @@ serve(async (req: Request) => {
 
     // Create invite record
     const { data: invite, error: insertError } = await supabase
-      .from("invites")
+      .from("fmcu_invites")
       .insert({
         code: inviteCode,
         inviter_id: user.id,

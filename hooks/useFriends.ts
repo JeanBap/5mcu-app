@@ -60,7 +60,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { data, error, count } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .select('*', { count: 'exact' })
         .eq('user_id', user.id)
         .neq('status', 'removed')
@@ -105,7 +105,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
       const inviteCode = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       const { data, error } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .insert({
           user_id: user.id,
           name,
@@ -144,7 +144,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .update({ frequency, updated_at: new Date().toISOString() })
         .eq('id', friendId)
         .eq('user_id', user.id);
@@ -170,7 +170,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .update({ status: 'removed', updated_at: new Date().toISOString() })
         .eq('id', friendId)
         .eq('user_id', user.id);
@@ -205,7 +205,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
       expiresAt.setDate(expiresAt.getDate() + 30);
 
       const { data, error } = await supabase
-        .from('invites')
+        .from('fmcu_invites')
         .insert({
           from_user_id: user.id,
           to_email: friend.email,
@@ -247,7 +247,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
     try {
       // Find the pending invite by code
       const { data: invite, error: inviteError } = await supabase
-        .from('invites')
+        .from('fmcu_invites')
         .select('*')
         .eq('invite_code', inviteCode)
         .eq('status', 'pending')
@@ -268,7 +268,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
 
       // Update the invite status to accepted
       const { error: updateInviteError } = await supabase
-        .from('invites')
+        .from('fmcu_invites')
         .update({ status: 'accepted', updated_at: new Date().toISOString() })
         .eq('id', invite.id);
 
@@ -278,7 +278,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
 
       // Update the original friend record to link to the accepting user
       const { data: friendRecord, error: friendFetchError } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .select('*')
         .eq('id', invite.friend_link_id)
         .single();
@@ -288,7 +288,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
       }
 
       const { error: friendUpdateError } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .update({
           friend_user_id: user.id,
           status: 'active',
@@ -304,7 +304,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
       const reciprocalInviteCode = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       const { error: reciprocalError } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .insert({
           user_id: user.id,
           friend_user_id: invite.from_user_id,

@@ -85,7 +85,7 @@ export default function BookCallScreen() {
       setError(null);
 
       const { data: friendData, error: friendError } = await supabase
-        .from('friends')
+        .from('fmcu_friends')
         .select('id, user_id, friend_user_id, friend_name, frequency')
         .eq('id', friendId)
         .single();

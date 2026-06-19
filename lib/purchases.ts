@@ -23,7 +23,7 @@ async function syncPremiumToSupabase(isPremium: boolean): Promise<void> {
     if (!user) return;
 
     const { error } = await supabase
-      .from('profiles')
+      .from('fmcu_profiles')
       .update({ is_premium: isPremium })
       .eq('id', user.id);
 
