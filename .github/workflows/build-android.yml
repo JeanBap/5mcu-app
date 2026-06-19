@@ -40,10 +40,42 @@ jobs:
           EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: "635074351881-hka7ustguldpt5s4nqdf4ul7k34hrvk7.apps.googleusercontent.com"
           EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: "635074351881-1r4lkhvqgl6ru8ksmo6lfb0ale2k2hte.apps.googleusercontent.com"
 
-      - name: Build debug APK
+      - name: Decode release keystore
+        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+
+      - name: Inject release signing config
+        run: |
+          cd android/app
+          python3 << 'PYEOF'
+          with open("build.gradle", "r") as f:
+              content = f.read()
+          signing_config = """
+    signingConfigs {
+        release {
+            storeFile file("release.keystore")
+            storePassword "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"
+            keyAlias "${{ secrets.RELEASE_KEY_ALIAS }}"
+            keyPassword "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"
+        }
+    }
+"""
+          content = content.replace(
+              "    buildTypes {",
+              signing_config + "    buildTypes {"
+          )
+          content = content.replace(
+              "signingConfig signingConfigs.debug",
+              "signingConfig signingConfigs.release"
+          )
+          with open("build.gradle", "w") as f:
+              f.write(content)
+          print("Signing config injected")
+          PYEOF
+
+      - name: Build release APK
         run: |
           cd android
-          ./gradlew app:assembleDebug --no-daemon
+          ./gradlew app:assembleRelease --no-daemon
         env:
           EXPO_PUBLIC_SUPABASE_URL: "https://tosyulolriavzgkpwzrn.supabase.co"
           EXPO_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvc3l1bG9scmlhdnpna3B3enJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0NzIsImV4cCI6MjA5NDM0NzQ3Mn0.LVxiplL8DGVB481AXiEDVGWplfXprMPK_zR8A__6j7M"
@@ -55,6 +87,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: 5mcu-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 14
+          name: 5mcu-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
