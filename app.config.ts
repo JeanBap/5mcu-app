@@ -2,7 +2,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "5MCU",
-  slug: "5mcu",
+  slug: "fivemcu",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -91,7 +91,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@react-native-google-signin/google-signin",
       {
         iosUrlScheme:
-          "com.googleusercontent.apps.YOUR_IOS_CLIENT_ID",
+          "com.googleusercontent.apps.635074351881-1r4lkhvqgl6ru8ksmo6lfb0ale2k2hte",
       },
     ],
     "expo-secure-store",
@@ -102,7 +102,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     eas: {
-      projectId: "your-eas-project-id",
+      projectId: "e02fd761-88fc-409e-8624-cb870b95da2b",
     },
     router: {
       origin: "https://fivemcu.app",

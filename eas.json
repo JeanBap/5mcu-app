@@ -11,21 +11,33 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://your-project-ref.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-supabase-anon-key"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tosyulolriavzgkpwzrn.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvc3l1bG9scmlhdnpna3B3enJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0NzIsImV4cCI6MjA5NDM0NzQ3Mn0.LVxiplL8DGVB481AXiEDVGWplfXprMPK_zR8A__6j7M",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "test_CZjSWlZvhpYvapRFuxTMuKXNvGy",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_CZjSWlZvhpYvapRFuxTMuKXNvGy",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "635074351881-hka7ustguldpt5s4nqdf4ul7k34hrvk7.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "635074351881-1r4lkhvqgl6ru8ksmo6lfb0ale2k2hte.apps.googleusercontent.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://your-project-ref.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-supabase-anon-key"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tosyulolriavzgkpwzrn.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvc3l1bG9scmlhdnpna3B3enJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0NzIsImV4cCI6MjA5NDM0NzQ3Mn0.LVxiplL8DGVB481AXiEDVGWplfXprMPK_zR8A__6j7M",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "test_CZjSWlZvhpYvapRFuxTMuKXNvGy",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_CZjSWlZvhpYvapRFuxTMuKXNvGy",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "635074351881-hka7ustguldpt5s4nqdf4ul7k34hrvk7.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "635074351881-1r4lkhvqgl6ru8ksmo6lfb0ale2k2hte.apps.googleusercontent.com"
       }
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://your-project-ref.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-supabase-anon-key"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://tosyulolriavzgkpwzrn.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvc3l1bG9scmlhdnpna3B3enJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0NzIsImV4cCI6MjA5NDM0NzQ3Mn0.LVxiplL8DGVB481AXiEDVGWplfXprMPK_zR8A__6j7M",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "test_CZjSWlZvhpYvapRFuxTMuKXNvGy",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_CZjSWlZvhpYvapRFuxTMuKXNvGy",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "635074351881-hka7ustguldpt5s4nqdf4ul7k34hrvk7.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "635074351881-1r4lkhvqgl6ru8ksmo6lfb0ale2k2hte.apps.googleusercontent.com"
       },
       "ios": {
         "autoIncrement": true
