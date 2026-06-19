@@ -98,6 +98,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "expo-secure-store",
     "expo-font",
+    [
+      "expo-build-properties",
+      {
+        android: {
+          kotlinVersion: "1.9.25",
+        },
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
