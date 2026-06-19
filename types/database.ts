@@ -107,6 +107,7 @@ export interface Database {
           friend_phone: string | null;
           friend_email: string | null;
           frequency_per_month: number;
+          frequency_days: number;
           status: Database["public"]["Enums"]["fmcu_friend_status"];
           created_at: string;
           updated_at: string;
@@ -119,6 +120,7 @@ export interface Database {
           friend_phone?: string | null;
           friend_email?: string | null;
           frequency_per_month?: number;
+          frequency_days?: number;
           status?: Database["public"]["Enums"]["fmcu_friend_status"];
           created_at?: string;
           updated_at?: string;
@@ -131,6 +133,7 @@ export interface Database {
           friend_phone?: string | null;
           friend_email?: string | null;
           frequency_per_month?: number;
+          frequency_days?: number;
           status?: Database["public"]["Enums"]["fmcu_friend_status"];
           created_at?: string;
           updated_at?: string;
@@ -160,6 +163,7 @@ export interface Database {
           invite_code: string;
           status: Database["public"]["Enums"]["fmcu_invite_status"];
           frequency_per_month: number;
+          frequency_days: number;
           expires_at: string;
           created_at: string;
         };
@@ -170,6 +174,7 @@ export interface Database {
           invite_code?: string;
           status?: Database["public"]["Enums"]["fmcu_invite_status"];
           frequency_per_month?: number;
+          frequency_days?: number;
           expires_at?: string;
           created_at?: string;
         };
@@ -180,6 +185,7 @@ export interface Database {
           invite_code?: string;
           status?: Database["public"]["Enums"]["fmcu_invite_status"];
           frequency_per_month?: number;
+          frequency_days?: number;
           expires_at?: string;
           created_at?: string;
         };

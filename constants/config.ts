@@ -32,27 +32,68 @@ export const APP_CONFIG = {
   termsUrl: "https://fivemcu.app/terms",
 } as const;
 
+/** Frequency stored as days between catch-ups */
 export const FREQUENCY_OPTIONS: {
   label: string;
+  shortLabel: string;
   value: number;
   description: string;
 }[] = [
   {
-    label: "Once a month",
-    value: 1,
-    description: "A quick catch-up once per month",
-  },
-  {
-    label: "Twice a month",
-    value: 2,
-    description: "Stay closer with bi-weekly calls",
-  },
-  {
     label: "Weekly",
-    value: 4,
-    description: "Keep in regular touch every week",
+    shortLabel: "Weekly",
+    value: 7,
+    description: "Every week",
+  },
+  {
+    label: "Every 2 weeks",
+    shortLabel: "2 wks",
+    value: 14,
+    description: "Twice a month",
+  },
+  {
+    label: "Every 3 weeks",
+    shortLabel: "3 wks",
+    value: 21,
+    description: "About 3 weeks apart",
+  },
+  {
+    label: "Monthly",
+    shortLabel: "Monthly",
+    value: 30,
+    description: "Once a month",
+  },
+  {
+    label: "Every 2 months",
+    shortLabel: "2 mo",
+    value: 60,
+    description: "Every couple of months",
+  },
+  {
+    label: "Every 3 months",
+    shortLabel: "3 mo",
+    value: 90,
+    description: "Quarterly",
+  },
+  {
+    label: "Every 6 months",
+    shortLabel: "6 mo",
+    value: 180,
+    description: "Twice a year",
+  },
+  {
+    label: "Annually",
+    shortLabel: "Yearly",
+    value: 365,
+    description: "Once a year",
   },
 ] as const;
+
+/** Helper: convert frequency_days to a human-readable label */
+export function frequencyLabel(days: number): string {
+  const opt = FREQUENCY_OPTIONS.find((o) => o.value === days);
+  return opt?.label ?? `Every ${days} days`;
+}
 
 export const VIDEO_APPS: {
   id: string;

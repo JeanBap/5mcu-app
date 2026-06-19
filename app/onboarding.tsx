@@ -12,7 +12,7 @@ import {
   ListRenderItemInfo,
 } from 'react-native';
 import { router } from 'expo-router';
-import { COLORS } from '@/constants/config';
+import { COLORS, FREQUENCY_OPTIONS } from '@/constants/config';
 import { useAuth } from '@/hooks/useAuth';
 import SlotPicker from '@/components/SlotPicker';
 import {
@@ -21,7 +21,7 @@ import {
   PhoneContact,
 } from '@/lib/contacts';
 
-type FrequencyOption = 1 | 2 | 4;
+type FrequencyDays = (typeof FREQUENCY_OPTIONS)[number]['value'];
 
 interface VideoApp {
   id: string;
@@ -81,7 +81,7 @@ export default function OnboardingScreen() {
   const [contacts, setContacts] = useState<PhoneContact[]>([]);
   const [contactSearch, setContactSearch] = useState('');
   const [selectedContact, setSelectedContact] = useState<PhoneContact | null>(null);
-  const [frequency, setFrequency] = useState<FrequencyOption>(2);
+  const [frequency, setFrequency] = useState<number>(30);
   const [contactsLoaded, setContactsLoaded] = useState(false);
 
   // Step 2 state
@@ -348,9 +348,9 @@ export default function OnboardingScreen() {
           <Text
             style={[styles.frequencyLabel, { color: secondaryText }]}
           >
-            Catch up frequency (per month)
+            How often do you want to catch up?
           </Text>
-          <View style={styles.frequencyRow}>
+          <View style={styles.frequencyGrid}>
             {FREQUENCY_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
@@ -364,7 +364,7 @@ export default function OnboardingScreen() {
                 ]}
                 onPress={() => setFrequency(opt.value)}
                 accessibilityRole="button"
-                accessibilityLabel={`${opt.label} per month`}
+                accessibilityLabel={opt.label}
                 accessibilityState={{ selected: frequency === opt.value }}
                 activeOpacity={0.7}
               >
@@ -374,7 +374,7 @@ export default function OnboardingScreen() {
                     { color: frequency === opt.value ? '#FFFFFF' : textColor },
                   ]}
                 >
-                  {opt.label}
+                  {opt.shortLabel}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -626,20 +626,21 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  frequencyRow: {
+  frequencyGrid: {
     flexDirection: 'row',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   frequencyButton: {
-    flex: 1,
-    height: 44,
+    width: '23%' as any,
+    height: 40,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   frequencyButtonText: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
   },
   emptyContainer: {

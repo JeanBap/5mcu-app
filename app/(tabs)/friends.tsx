@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { COLORS, APP_CONFIG, FREQUENCY_OPTIONS } from '@/constants/config';
+import { COLORS, APP_CONFIG, FREQUENCY_OPTIONS, frequencyLabel } from '@/constants/config';
 import { useFriends } from '@/hooks/useFriends';
 import { useAuth } from '@/hooks/useAuth';
 import FriendCard from '@/components/FriendCard';
@@ -44,14 +44,10 @@ const INITIAL_FORM: AddFriendForm = {
   name: '',
   phone: '',
   email: '',
-  frequency: 1,
+  frequency: 30,
 };
 
-const FREQ_OPTIONS = FREQUENCY_OPTIONS ?? [
-  { label: '1x/mo', value: 1 },
-  { label: '2x/mo', value: 2 },
-  { label: '4x/mo', value: 4 },
-];
+const FREQ_OPTIONS = FREQUENCY_OPTIONS;
 
 export default function FriendsScreen() {
   const colorScheme = useColorScheme();
@@ -126,7 +122,7 @@ export default function FriendsScreen() {
         form.name.trim(),
         form.phone.trim() || '',
         form.email.trim() || '',
-        form.frequency as 1 | 2 | 4,
+        form.frequency,
       );
 
       handleCloseModal();
@@ -241,7 +237,7 @@ export default function FriendsScreen() {
   };
 
   const renderFrequencyPicker = () => (
-    <View style={styles.frequencyRow}>
+    <View style={styles.frequencyGrid}>
       {FREQ_OPTIONS.map((option) => {
         const isSelected = form.frequency === option.value;
         return (
@@ -262,7 +258,7 @@ export default function FriendsScreen() {
                 { color: isSelected ? '#FFFFFF' : textSecondary },
               ]}
             >
-              {option.label}
+              {option.shortLabel}
             </Text>
           </Pressable>
         );
@@ -680,19 +676,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 4,
   },
-  frequencyRow: {
+  frequencyGrid: {
     flexDirection: 'row',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 24,
   },
   frequencyPill: {
-    flex: 1,
-    paddingVertical: 10,
+    width: '23%' as any,
+    paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
   },
   frequencyPillText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
   },
   submitButton: {

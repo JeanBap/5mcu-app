@@ -56,12 +56,13 @@ serve(async (req: Request) => {
         user_id,
         friend_user_id,
         friend_name,
+        frequency_days,
         frequency_per_month,
         status
       `)
       .eq("status", "active")
       .not("friend_user_id", "is", null) // Only friends who have signed up
-      .gt("frequency_per_month", 0);
+      .gt("frequency_days", 0);
 
     if (linksError) {
       console.error("Failed to fetch friend links:", linksError.message);
@@ -92,7 +93,7 @@ serve(async (req: Request) => {
       const result = {
         friendLinkId: link.id,
         friendName: link.friend_name,
-        targetPerMonth: link.frequency_per_month,
+        targetPerMonth: link.frequency_days ? Math.round(30 / link.frequency_days) : link.frequency_per_month,
         bookingsThisMonth: 0,
         belowTarget: false,
         notificationSent: false,
@@ -126,7 +127,8 @@ serve(async (req: Request) => {
         const dayOfMonth = now.getDate();
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const monthProgress = dayOfMonth / daysInMonth;
-        const expectedByNow = Math.floor(link.frequency_per_month * monthProgress);
+        const freqPerMonth = link.frequency_days ? Math.round(30 / link.frequency_days) : link.frequency_per_month;
+        const expectedByNow = Math.floor(freqPerMonth * monthProgress);
 
         result.belowTarget = result.bookingsThisMonth < expectedByNow;
 

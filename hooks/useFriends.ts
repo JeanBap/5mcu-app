@@ -17,9 +17,9 @@ interface FriendsActions {
   /** Fetch all friends for the current user (excludes removed) */
   fetchFriends: () => Promise<void>;
   /** Add a new friend with contact details and call frequency */
-  addFriend: (name: string, phone: string, email: string, frequency: 1 | 2 | 4) => Promise<Friend>;
+  addFriend: (name: string, phone: string, email: string, frequency: number) => Promise<Friend>;
   /** Update the call frequency for a friend */
-  updateFrequency: (friendId: string, frequency: 1 | 2 | 4) => Promise<void>;
+  updateFrequency: (friendId: string, frequency: number) => Promise<void>;
   /** Soft-delete a friend by setting status to 'removed' */
   removeFriend: (friendId: string) => Promise<void>;
   /** Send an invite to a friend and return the invite with a shareable link */
@@ -83,7 +83,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
     name: string,
     phone: string,
     email: string,
-    frequency: 1 | 2 | 4
+    frequency: number
   ) => {
     const { user, profile } = useAuth.getState();
     if (!user) {
@@ -108,12 +108,11 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
         .from('fmcu_friends')
         .insert({
           user_id: user.id,
-          name,
-          phone,
-          email,
-          frequency,
+          friend_name: name,
+          friend_phone: phone || null,
+          friend_email: email || null,
+          frequency_days: frequency,
           status: 'pending',
-          invite_code: inviteCode,
         })
         .select()
         .single();
@@ -135,7 +134,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
     }
   },
 
-  updateFrequency: async (friendId: string, frequency: 1 | 2 | 4) => {
+  updateFrequency: async (friendId: string, frequency: number) => {
     const { user } = useAuth.getState();
     if (!user) {
       throw new Error('You must be signed in to update friend frequency.');
@@ -145,7 +144,7 @@ export const useFriends = create<FriendsState & FriendsActions>()((set, get) => 
     try {
       const { error } = await supabase
         .from('fmcu_friends')
-        .update({ frequency, updated_at: new Date().toISOString() })
+        .update({ frequency_days: frequency, updated_at: new Date().toISOString() })
         .eq('id', friendId)
         .eq('user_id', user.id);
 
