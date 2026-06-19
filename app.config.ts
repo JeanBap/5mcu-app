@@ -3,6 +3,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "5MCU",
   slug: "fivemcu",
+  owner: "yannipaps-organization",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
