@@ -46,31 +46,10 @@ jobs:
       - name: Inject release signing config
         run: |
           cd android/app
-          python3 << 'PYEOF'
-          with open("build.gradle", "r") as f:
-              content = f.read()
-          signing_config = """
-    signingConfigs {
-        release {
-            storeFile file("release.keystore")
-            storePassword "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"
-            keyAlias "${{ secrets.RELEASE_KEY_ALIAS }}"
-            keyPassword "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"
-        }
-    }
-"""
-          content = content.replace(
-              "    buildTypes {",
-              signing_config + "    buildTypes {"
-          )
-          content = content.replace(
-              "signingConfig signingConfigs.debug",
-              "signingConfig signingConfigs.release"
-          )
-          with open("build.gradle", "w") as f:
-              f.write(content)
-          print("Signing config injected")
-          PYEOF
+          sed -i '/buildTypes {/i\    signingConfigs {\n        release {\n            storeFile file("release.keystore")\n            storePassword "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"\n            keyAlias "${{ secrets.RELEASE_KEY_ALIAS }}"\n            keyPassword "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"\n        }\n    }' build.gradle
+          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/g' build.gradle
+          echo "Signing config injected"
+          head -80 build.gradle
 
       - name: Build release APK
         run: |
